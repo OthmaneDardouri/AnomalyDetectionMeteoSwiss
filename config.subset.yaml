@@ -1,0 +1,64 @@
+# Config for the committed subset under data/mvtec_subset: two classes, 20
+# training images each, 256x256. Runs every pipeline end to end on CPU in a
+# few minutes on real images. The scores are NOT meaningful -- use config.yaml
+# and the full dataset for that.
+#
+# Rebuild the subset with:
+#   python scripts/make_subset.py --source /path/to/mvtec_anomaly_detection
+DATASET_PATH: "data/mvtec_subset"
+SEED: 42
+
+DATASET_OBJECTS:
+  - screw
+  - wood
+
+FOUNDATIONAL_OBJECTS:
+  - screw
+  - wood
+
+MODELS_CONFIG:
+  base_autoencoder:
+    batch_size: 4
+    num_epochs: 3
+    validation_split: 0.2
+    learning_rate: 1e-3
+    num_workers: 0
+
+  trafo_autoencoder:
+    batch_size: 2
+    num_epochs: 3
+    validation_split: 0.2
+    learning_rate: 1e-3
+    num_workers: 0
+    min_lr: 1e-5
+    patience: 3
+    delta: 1e-3
+
+  vit_autoencoder:
+    batch_size: 2
+    num_epochs: 3
+    validation_split: 0.2
+    learning_rate: 1e-4
+    num_workers: 0
+    min_lr: 1e-5
+    patience: 3
+    delta: 1e-3
+    threshold_quantile: 0.997
+
+  DeepFeatureAE:
+    batch_size: 8
+    num_epochs: 3
+    validation_split: 0.2
+    learning_rate: 1e-3
+    input_size: 224
+    smooth: True
+    layer_hooks: ['layer2', 'layer3']
+    latent_dim: 100
+    is_bn: True
+    threshold_computation_mode: 'all'
+
+  patchcore:
+    batch_size: 1
+    memory_bank_subsample_ratio: 0.1
+    threshold_multiplier: 2.0
+    distance_chunk_size: 10000

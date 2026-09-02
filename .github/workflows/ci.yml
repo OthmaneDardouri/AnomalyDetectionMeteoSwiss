@@ -1,0 +1,136 @@
+﻿name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # CPU wheels only; default PyPI torch drags in ~2.5 GB of unused CUDA libs.
+  TORCH_INDEX_URL: https://download.pytorch.org/whl/cpu
+  MPLBACKEND: Agg
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install ruff==0.16.5
+      - run: python -m ruff check --output-format=github .
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Floor and ceiling of the supported range from pyproject.toml.
+        python-version: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --index-url "$TORCH_INDEX_URL" torch torchvision
+          python -m pip install -r requirements.txt
+          python -m pip install --no-deps -e .
+          python -m pip install pytest httpx
+      # The subset tests skip themselves when it's missing, so a .gitignore
+      # slip would turn real-data coverage off silently and CI stay green.
+      - name: Check the dataset subset is present
+        run: |
+          test -d data/mvtec_subset/screw/train/good
+          test -d data/mvtec_subset/wood/ground_truth
+      # `slow` tests pull ResNet50 weights; they run in test-slow, which caches them.
+      - name: Run smoke tests
+        run: python -m pytest -m "not slow" -v
+
+  test-slow:
+    # Pretrained-backbone pipelines: too slow for every push, but they're the
+    # ones that would catch a broken PatchCore/deep-feature path.
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-slow-tests')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Cache pretrained weights
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/torch
+          key: torch-hub-resnet50-v1
+      - name: Install dependencies
+        run: |
+          python -m pip install --index-url "$TORCH_INDEX_URL" torch torchvision
+          python -m pip install -r requirements.txt
+          python -m pip install --no-deps -e .
+          python -m pip install pytest httpx
+      - name: Run full suite
+        run: python -m pytest -v
+      # Covers the CLI the README tells people to use, on real images. Note the
+      # nested train_patchcore_<class>/ dir -- PatchCoreManager writes there,
+      # not directly under --train_path.
+      - name: Real end-to-end run on the wood subset
+        run: |
+          python train_test.py --config config.subset.yaml --model_name patchcore \
+            --product_class wood --mode all \
+            --train_path runs/train/ci_wood --test_path runs/test/ci_wood
+          test -f runs/train/ci_wood/train_patchcore_wood/training_statistics.yaml
+          test -f runs/test/ci_wood/segmentation_wood/scores.json
+      # Smoke-check the drift CLI. Deliberately NOT --fail-on-drift: the test
+      # split is 8 good + 15 defective, so a high anomaly rate is correct here.
+      # Detector accuracy is asserted in tests/test_drift.py instead.
+      - name: Drift check
+        run: |
+          anom-detect-drift \
+            --reference runs/train/ci_wood/train_patchcore_wood \
+            --live runs/test/ci_wood/segmentation_wood/scores.json
+      - name: Upload segmentation maps
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-wood-segmentation
+          path: runs/test/ci_wood
+          if-no-files-found: ignore
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: anom-detect:ci
+          # Weights are baked in for real use; skipping keeps CI ~100 MB lighter.
+          build-args: PREFETCH_WEIGHTS=0
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke-check the entrypoint
+        run: docker run --rm anom-detect:ci --help
+      # The baked-in subset means this needs no dataset mount. `base` trains
+      # from scratch, so it also needs no pretrained weights -- which the CI
+      # image is built without (PREFETCH_WEIGHTS=0 above).
+      - name: Run the baked-in subset end-to-end
+        run: |
+          docker run --rm anom-detect:ci \
+            --config config.subset.yaml --model_name base \
+            --product_class wood --mode all \
+            --train_path runs/train/docker_wood --test_path runs/test/docker_wood
+

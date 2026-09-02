@@ -1,0 +1,89 @@
+# Your MVTec AD directory: the folder holding bottle/, cable/, ... A relative
+# path resolves against this file, not the working directory. Windows paths
+# need forward slashes, e.g. "C:/Users/<you>/Downloads/mvtec_anomaly_detection".
+# For the committed screw+wood subset, use `--config config.subset.yaml`.
+DATASET_PATH: "mvtec_anomaly_detection"
+SEED: 42
+
+DATASET_OBJECTS:
+  - bottle          # foundational
+  - cable
+  - can # REC
+  - capsule
+  - carpet          # foundational
+  - fabric # REC
+  - fruit_jelly
+  - grid
+  - hazelnut # REC  # foundational
+  - leather         # foundational
+  - metal_nut
+  - pill
+  - rice # REC
+  - screw
+  - sheet_metal
+  - tile
+  - toothbrush
+  - transistor      # foundational
+  - vial
+  - wallplugs # REC
+  - walnuts # REC   # foundational
+  - wood            # foundational
+  - zipper
+
+FOUNDATIONAL_OBJECTS:
+  #- bottle
+  - carpet
+  - hazelnut
+  - leather
+  #- transistor
+  #- walnuts
+  - wood
+
+MODELS_CONFIG:
+  base_autoencoder:
+    batch_size: 16
+    num_epochs: 30
+    validation_split: 0.1
+    learning_rate: 1e-3
+    num_workers : 8
+
+  trafo_autoencoder:
+    batch_size: 2
+    num_epochs: 100
+    validation_split: 0.1
+    learning_rate: 1e-3
+    num_workers : 8
+    min_lr: 1e-5
+    patience : 10
+    delta : 1e-3
+  
+  vit_autoencoder:
+    batch_size: 8
+    num_epochs: 300
+    validation_split: 0.1
+    learning_rate: 1e-4
+    num_workers : 8
+    min_lr: 1e-5
+    patience : 10
+    delta : 1e-3
+    threshold_quantile: 0.997
+    
+  DeepFeatureAE:
+    batch_size: 64
+    num_epochs: 31
+    validation_split: 0.1
+    #learning_rate: 1e-2
+    learning_rate: 1e-3
+    input_size: 224
+    smooth: True
+    layer_hooks: ['layer2', 'layer3']
+    latent_dim: 100
+    is_bn: True
+    threshold_computation_mode: 'all'
+  patchcore:
+    batch_size: 1  # one image at a time
+    # Uniform random subsample, not the paper's greedy coreset: cheaper,
+    # slightly worse coverage.
+    memory_bank_subsample_ratio: 0.1
+    threshold_multiplier: 2.0  # threshold = mean + 2*std
+    distance_chunk_size: 10000  # caps pairwise-distance memory

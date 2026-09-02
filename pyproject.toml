@@ -1,0 +1,39 @@
+[project]
+name = "anom-detect"
+version = "0.1.0"
+description = "Vision anomaly detection framework for MVTec AD: PatchCore, ViT, deep-feature and CNN/Transformer autoencoders."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+# Dependencies live in requirements.txt; install those, then `pip install -e .`.
+
+[project.scripts]
+anom-detect = "anom_detect.cli:main"
+anom-detect-serve = "anom_detect.serve:main"
+anom-detect-drift = "anom_detect.drift:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "slow: exercises a full pretrained-backbone pipeline; slower to run",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's parameter API is calls-in-defaults by design, not the B008 bug.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Form", "fastapi.Query"]

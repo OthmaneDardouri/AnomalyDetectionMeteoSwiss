@@ -1,0 +1,8 @@
+config: C:/Users/othma/AppData/Local/Temp/claude/c--Users-othma-Downloads-ANOM-DETECT-Vision-Anomaly-Detection-main--1--ANOM-DETECT-Vision-Anomaly-Detection-main/249b2972-dd7d-41b2-a99f-6e897d0c57c2/scratchpad/config.demo.yaml
+mlflow: false
+mode: train
+model_name: patchcore
+num_seg_samples: '2'
+product_class: toothbrush
+test_path: runs/test/patchcore_toothbrush
+train_path: runs/train/patchcore_toothbrush

@@ -1,0 +1,14 @@
+This directory contains a small downscaled subset of the MVTec Anomaly
+Detection (MVTec AD) dataset, redistributed for testing and CI only.
+
+  Paul Bergmann, Michael Fauser, David Sattlegger, Carsten Steger.
+  "MVTec AD -- A Comprehensive Real-World Dataset for Unsupervised Anomaly
+  Detection." CVPR 2019.
+  https://www.mvtec.com/company/research/datasets/mvtec-ad
+
+Licensed by MVTec Software GmbH under Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0):
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+The images here have been resized and sampled; they are NOT suitable for
+reporting benchmark numbers. Use the full dataset for that.

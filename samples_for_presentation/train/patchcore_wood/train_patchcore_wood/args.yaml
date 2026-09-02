@@ -1,0 +1,7 @@
+config: C:\Users\othma\Downloads\ANOM-DETECT-Vision-Anomaly-Detection-main (1)\ANOM-DETECT-Vision-Anomaly-Detection-main\config.yaml
+mode: train
+model_name: patchcore
+num_seg_samples: '5'
+product_class: wood
+test_path: runs/test/patchcore_wood
+train_path: runs/train/patchcore_wood

@@ -1,0 +1,8 @@
+config: C:/Users/othma/AppData/Local/Temp/claude/c--Users-othma-Downloads-ANOM-DETECT-Vision-Anomaly-Detection-main--1--ANOM-DETECT-Vision-Anomaly-Detection-main/249b2972-dd7d-41b2-a99f-6e897d0c57c2/scratchpad/config.wood_r010_m10.yaml
+mlflow: false
+mode: train
+model_name: patchcore
+num_seg_samples: '1'
+product_class: wood
+test_path: runs/test/pc_wood_r010_m10
+train_path: runs/train/pc_wood_r010_m10

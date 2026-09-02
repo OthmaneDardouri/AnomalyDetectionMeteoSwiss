@@ -1,0 +1,2 @@
+AUC ROC Score: 0.9842
+Threshold used: 12.3760

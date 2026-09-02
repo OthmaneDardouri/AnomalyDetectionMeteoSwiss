@@ -1,0 +1,37 @@
+extra/
+.vscode/
+
+# The full MVTec AD dataset (~5 GB) is never committed -- download it locally.
+# The small screw+wood subset under data/mvtec_subset/ IS tracked; build it
+# with scripts/make_subset.py.
+mvtec_anomaly_detection/
+data/*
+!data/mvtec_subset/
+
+# Run outputs (checkpoints, plots, TensorBoard logs).
+# Curated sample results that ARE tracked live in docs/sample_results/.
+runs/
+trains/
+output/
+
+__pycache__/
+*.pth
+*.pt
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+*.egg-info/
+build/
+dist/
+
+# MLflow's local tracking store, written wherever you ran --mlflow. Anchored
+# with a leading slash on purpose: unanchored, `mlruns/` and `mlflow.db` also
+# match inside examples/mlflow_runs/, which is the curated store that IS
+# tracked -- and a negation cannot rescue files out of an ignored directory.
+/mlruns/
+/mlartifacts/
+/mlflow.db
+
+# ...and the committed serving bundle is tracked despite the *.pth rule above.
+!models/dfr_hazelnut/checkpoints/*.pth

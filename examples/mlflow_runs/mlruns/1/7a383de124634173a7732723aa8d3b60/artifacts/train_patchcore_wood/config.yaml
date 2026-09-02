@@ -1,0 +1,75 @@
+DATASET_OBJECTS:
+- bottle
+- cable
+- can
+- capsule
+- carpet
+- fabric
+- fruit_jelly
+- grid
+- hazelnut
+- leather
+- metal_nut
+- pill
+- rice
+- screw
+- sheet_metal
+- tile
+- toothbrush
+- transistor
+- vial
+- wallplugs
+- walnuts
+- wood
+- zipper
+DATASET_PATH: C:/Users/othma/Downloads/ANOM-DETECT-Vision-Anomaly-Detection-main (1)/ANOM-DETECT-Vision-Anomaly-Detection-main/mvtec_anomaly_detection
+FOUNDATIONAL_OBJECTS:
+- carpet
+- hazelnut
+- leather
+- wood
+MODELS_CONFIG:
+  DeepFeatureAE:
+    batch_size: 64
+    input_size: 224
+    is_bn: true
+    latent_dim: 100
+    layer_hooks:
+    - layer2
+    - layer3
+    learning_rate: 1e-3
+    num_epochs: 31
+    smooth: true
+    threshold_computation_mode: all
+    validation_split: 0.1
+  base_autoencoder:
+    batch_size: 16
+    learning_rate: 1e-3
+    num_epochs: 30
+    num_workers: 2
+    validation_split: 0.1
+  patchcore:
+    batch_size: 1
+    distance_chunk_size: 10000
+    memory_bank_subsample_ratio: 0.01
+    threshold_multiplier: 2.0
+  trafo_autoencoder:
+    batch_size: 2
+    delta: 1e-3
+    learning_rate: 1e-3
+    min_lr: 1e-5
+    num_epochs: 100
+    num_workers: 2
+    patience: 10
+    validation_split: 0.1
+  vit_autoencoder:
+    batch_size: 8
+    delta: 1e-3
+    learning_rate: 1e-4
+    min_lr: 1e-5
+    num_epochs: 300
+    num_workers: 2
+    patience: 10
+    threshold_quantile: 0.997
+    validation_split: 0.1
+SEED: 42

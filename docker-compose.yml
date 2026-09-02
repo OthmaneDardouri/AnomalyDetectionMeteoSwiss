@@ -1,0 +1,69 @@
+# Usage:
+#   DATASET_PATH=/path/to/mvtec_anomaly_detection docker compose run --rm anom-detect \
+#     --model_name patchcore --product_class toothbrush --mode train \
+#     --train_path runs/train/patchcore_toothbrush
+#
+# On Windows PowerShell, set it first:  $env:DATASET_PATH = "C:/Users/you/Downloads/mvtec_anomaly_detection"
+
+services:
+  anom-detect:
+    build:
+      context: .
+      args:
+        # For GPU: TORCH_INDEX_URL=https://download.pytorch.org/whl/cu124
+        TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}
+    image: anom-detect:latest
+    # DataLoader workers (num_workers: 8 in config.yaml) share tensors through
+    # /dev/shm; Docker's 64 MB default makes them die with "bus error".
+    shm_size: "2gb"
+    volumes:
+      - ${DATASET_PATH:-./mvtec_anomaly_detection}:/data:ro
+      - ./runs:/app/runs
+      - torch-cache:/cache/torch
+    # Uncomment for an NVIDIA GPU (also needs the CUDA build arg above).
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # The deep-feature model over HTTP: docker compose up serve
+  # Serves the models/dfr_hazelnut bundle baked into the image, so it answers
+  # requests with no dataset mount and nothing trained first:
+  #   curl -F "file=@examples/sample_images/hazelnut/print_000.png"   #     http://localhost:8000/predict
+  # To serve a run of your own instead, train it, then set both variables:
+  #   PRODUCT_CLASS=wood MODEL_PATH=/app/runs/train/dfr_wood docker compose up serve
+  serve:
+    image: anom-detect:latest
+    entrypoint:
+      - anom-detect-serve
+      - --config
+      - config.yaml
+      - --product-class
+      - ${PRODUCT_CLASS:-hazelnut}
+      - --train-path
+      - ${MODEL_PATH:-/app/models/dfr_hazelnut}
+      # 0.0.0.0, not the 127.0.0.1 default: a container-local bind would only
+      # be reachable from inside the container, so the port mapping below
+      # would appear to do nothing.
+      - --host
+      - 0.0.0.0
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./runs:/app/runs:ro
+      - torch-cache:/cache/torch
+
+  # TensorBoard over the same runs/ directory: docker compose up tensorboard
+  tensorboard:
+    image: anom-detect:latest
+    entrypoint: ["tensorboard", "--logdir", "/app/runs", "--host", "0.0.0.0"]
+    ports:
+      - "6006:6006"
+    volumes:
+      - ./runs:/app/runs
+
+volumes:
+  torch-cache:

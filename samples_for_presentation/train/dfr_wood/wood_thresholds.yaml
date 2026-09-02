@@ -1,0 +1,13 @@
+thresholds:
+  mean_error: 43.210594177246094
+  mode: all
+  num_samples: 247
+  sigma_multiplier:
+  - 3.0
+  - 1.0
+  - 5.0
+  std_error: 42.842071533203125
+  thresholds:
+  - 171.73681640625
+  - 86.05266571044922
+  - 257.42095947265625

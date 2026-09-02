@@ -1,0 +1,40 @@
+.git
+.gitignore
+.venv
+venv
+
+# The full dataset is bind-mounted at /data, never baked in. Excluding it
+# keeps it out of the build context too. Otherwise every `docker build`
+# ships ~5 GB to the daemon before the first layer runs.
+mvtec_anomaly_detection/
+
+# Run outputs. These are bind-mounted at runtime, never baked in.
+runs/
+trains/
+output/
+extra/
+# Committed example runs: browsed with `mlflow ui`, never needed in the image.
+examples/mlflow_runs/
+
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pth
+*.pt
+# ...except the serving bundle, which the image copies in so `serve` works
+# without a trained run mounted.
+!models/**/*.pth
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.coverage
+
+.vscode/
+docs/
+*.pdf
+
+Dockerfile
+.dockerignore
+docker-compose.yml
